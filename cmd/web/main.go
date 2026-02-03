@@ -5,21 +5,33 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
-func main() {
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+}
 
+func main() {
+	infoLog := log.New(os.Stdout, "Info:\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "Error:\t", log.Ldate|log.Ltime|log.Lshortfile)
 	addr := flag.String("addr", ":3001", "port for server")
 	flag.Parse()
 	fmt.Println("hello")
-	fileServer := http.FileServer(http.Dir("./ui/static"))
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", handleHome)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-	fmt.Printf("Starting server on %s", *addr)
-	if err := http.ListenAndServe(*addr, mux); err != nil {
-		log.Fatal("server:%w", err)
+
+	app := application{
+		errorLog: errorLog,
+		infoLog:  infoLog,
+	}
+
+	infoLog.Printf("Starting server on %s", *addr)
+	srv := &http.Server{
+		Addr:     *addr,
+		ErrorLog: errorLog,
+		Handler:  app.routes(),
+	}
+	if err := srv.ListenAndServe(); err != nil {
+		errorLog.Fatal("server:%w", err)
 	}
 }
