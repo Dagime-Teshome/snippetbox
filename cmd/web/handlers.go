@@ -7,9 +7,9 @@ import (
 	"strconv"
 )
 
-func handleHome(w http.ResponseWriter, r *http.Request) {
+func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		w.Write([]byte("404 not found"))
+		app.NotFound(w)
 		return
 	}
 	files := []string{
@@ -19,37 +19,36 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 	}
 	template, err := template.ParseFiles(files...)
 	if err != nil {
-		http.Error(w, "couldn't parse template", 503)
+		app.ServerError(w, err)
 		return
 	}
 
 	if err := template.Execute(w, nil); err != nil {
-		http.Error(w, "couldn't execute html", 505)
+		app.ServerError(w, err)
 		return
 	}
 }
 
-func createSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		w.WriteHeader(405)
-		w.Write([]byte("Method not allowed"))
+		app.ClientError(w, 405)
 		return
 	}
 	w.Write([]byte("create snippet"))
 }
 
-func showSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {
 		if r.URL.Query().Get("id") == "" {
 			id = 0 // Default value
 			fmt.Printf("Using default value: %d\n", id)
 		}
-		http.Error(w, "id must be a valid number", 505)
+		app.ClientError(w, 505)
 		return
 	}
 	if id <= 0 {
-		http.Error(w, "id needs to be greater than zero", 505)
+		app.ServerError(w, fmt.Errorf("id cant be less than 0"))
 		return
 	}
 
