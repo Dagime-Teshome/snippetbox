@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/Dagime-Teshome/snippetbox/pkg/models"
 )
 
 func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
@@ -31,10 +33,18 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		app.ClientError(w, 405)
+		w.Header().Set("Allow", "POST")
+		app.ClientError(w, http.StatusMethodNotAllowed)
 		return
 	}
-	w.Write([]byte("create snippet"))
+	title, content, expires := "test title", "test content", "5"
+	id, err := app.snippet.Insert(title, content, expires)
+
+	if err != nil {
+		app.ServerError(w, err)
+	}
+
+	w.Write([]byte(fmt.Sprintf("snippet create with id: %v", id)))
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
@@ -52,5 +62,24 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("show snippet for %v", id)))
+	snippet, err := app.snippet.GetById(id)
+	if err == models.ErrNoRecord {
+		app.NotFound(w)
+		return
+	} else if err != nil {
+		app.ServerError(w, err)
+		return
+	}
+
+	w.Write([]byte(fmt.Sprintf("show snippet for %v", snippet)))
+}
+
+func (app *application) listSnippets(w http.ResponseWriter, r *http.Request) {
+	snippets, err := app.snippet.Latest()
+	if err != nil {
+		app.ServerError(w, err)
+	}
+	for _, snippet := range snippets {
+		fmt.Fprintf(w, "%v\n", snippet)
+	}
 }
