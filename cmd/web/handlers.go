@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -14,18 +13,20 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 		app.NotFound(w)
 		return
 	}
-	files := []string{
-		"./ui/html/home.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-		"./ui/html/footer.partial.tmpl",
-	}
-	template, err := template.ParseFiles(files...)
+
+	template, err := returnTemplate("home")
 	if err != nil {
 		app.ServerError(w, err)
 		return
 	}
-
-	if err := template.Execute(w, nil); err != nil {
+	snippets, err := app.snippet.Latest()
+	if err != nil {
+		app.ServerError(w, err)
+	}
+	data := &templateData{
+		Snippet:  nil,
+		Snippets: snippets}
+	if err := template.Execute(w, data); err != nil {
 		app.ServerError(w, err)
 		return
 	}
@@ -51,8 +52,7 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {
 		if r.URL.Query().Get("id") == "" {
-			id = 0 // Default value
-			fmt.Printf("Using default value: %d\n", id)
+			id = 0
 		}
 		app.ClientError(w, 505)
 		return
@@ -67,6 +67,16 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		app.NotFound(w)
 		return
 	} else if err != nil {
+		app.ServerError(w, err)
+		return
+	}
+	template, err := returnTemplate("snippet")
+	if err != nil {
+		app.ServerError(w, err)
+		return
+	}
+	data := &templateData{Snippet: snippet}
+	if err := template.Execute(w, data); err != nil {
 		app.ServerError(w, err)
 		return
 	}
