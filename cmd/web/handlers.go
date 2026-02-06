@@ -13,23 +13,15 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 		app.NotFound(w)
 		return
 	}
-
-	template, err := returnTemplate("home")
-	if err != nil {
-		app.ServerError(w, err)
-		return
-	}
 	snippets, err := app.snippet.Latest()
 	if err != nil {
 		app.ServerError(w, err)
 	}
 	data := &templateData{
 		Snippet:  nil,
-		Snippets: snippets}
-	if err := template.Execute(w, data); err != nil {
-		app.ServerError(w, err)
-		return
+		Snippets: snippets,
 	}
+	app.render(w, r, "home.page.tmpl", data)
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
@@ -70,16 +62,8 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		app.ServerError(w, err)
 		return
 	}
-	template, err := returnTemplate("snippet")
-	if err != nil {
-		app.ServerError(w, err)
-		return
-	}
 	data := &templateData{Snippet: snippet}
-	if err := template.Execute(w, data); err != nil {
-		app.ServerError(w, err)
-		return
-	}
+	app.render(w, r, "show.page.tmpl", data)
 
 	w.Write([]byte(fmt.Sprintf("show snippet for %v", snippet)))
 }
