@@ -9,10 +9,6 @@ import (
 )
 
 func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		app.NotFound(w)
-		return
-	}
 	snippets, err := app.snippet.Latest()
 	if err != nil {
 		app.ServerError(w, err)
@@ -25,11 +21,6 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		w.Header().Set("Allow", "POST")
-		app.ClientError(w, http.StatusMethodNotAllowed)
-		return
-	}
 	title, content, expires := "test title", "test content", "5"
 	id, err := app.snippet.Insert(title, content, expires)
 
@@ -41,7 +32,7 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	id, err := strconv.Atoi(r.URL.Query().Get(":id"))
 	if err != nil {
 		if r.URL.Query().Get("id") == "" {
 			id = 0
@@ -76,4 +67,8 @@ func (app *application) listSnippets(w http.ResponseWriter, r *http.Request) {
 	for _, snippet := range snippets {
 		fmt.Fprintf(w, "%v\n", snippet)
 	}
+}
+
+func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Create a new snippet..."))
 }
