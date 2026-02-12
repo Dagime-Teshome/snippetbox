@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Dagime-Teshome/snippetbox/pkg/forms"
 	"github.com/Dagime-Teshome/snippetbox/pkg/models"
 )
 
@@ -21,14 +22,30 @@ func (app *application) handleHome(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	title, content, expires := "test title", "test content", "5"
+	if err := r.ParseForm(); err != nil {
+		app.ClientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := forms.New(r.PostForm)
+
+	form.Required("title", "content", "expires")
+	form.MaxLength("title", 100)
+	form.PermittedValues("expires", "365", "7", "1")
+
+	if !form.Valid() {
+		app.render(w, r, "create.page.tmpl", &templateData{
+			Form: form,
+		})
+		return
+	}
+	title, content, expires := form.Get("title"), form.Get("content"), form.Get("expires")
 	id, err := app.snippet.Insert(title, content, expires)
 
 	if err != nil {
 		app.ServerError(w, err)
 	}
-
-	w.Write([]byte(fmt.Sprintf("snippet create with id: %v", id)))
+	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
@@ -70,5 +87,8 @@ func (app *application) listSnippets(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Create a new snippet..."))
+	app.render(w, r, "create.page.tmpl", &templateData{
+		// Pass a new empty forms.Form object to the template.
+		Form: forms.New(nil),
+	})
 }
