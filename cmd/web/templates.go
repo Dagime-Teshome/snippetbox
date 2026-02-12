@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"path/filepath"
 
+	"github.com/Dagime-Teshome/snippetbox/pkg/forms"
 	"github.com/Dagime-Teshome/snippetbox/pkg/models"
 )
 
@@ -11,6 +12,7 @@ type templateData struct {
 	CurrentYear int
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet
+	Form        *forms.Form
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {
