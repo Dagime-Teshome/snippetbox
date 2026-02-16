@@ -45,6 +45,7 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.ServerError(w, err)
 	}
+	app.Session.Put(r, "flash", "Snippet Added Successfully")
 	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }
 
