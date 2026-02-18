@@ -93,3 +93,73 @@ func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request
 		Form: forms.New(nil),
 	})
 }
+
+func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "signup.page.tmpl", &templateData{
+		Form: forms.New(nil),
+	})
+}
+func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		app.ClientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("name", "email", "password")
+	form.MinLength("password", 5)
+	form.MatchesPattern("email", forms.EmailRX)
+	if !form.Valid() {
+		app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
+		return
+	}
+	name, email, password := form.Get("name"), form.Get("email"), form.Get("password")
+
+	err := app.user.Insert(name, email, password)
+	if err == models.ErrDuplicateEmail {
+		form.Errors.Add("email", "Address is already in use")
+		app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
+		return
+	} else if err != nil {
+		app.ServerError(w, err)
+		return
+	}
+	app.Session.Put(r, "flash", "Your signup was successful. Please log in.")
+	// And redirect the user to the login page.
+	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+}
+func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "login.page.tmpl", &templateData{
+		Form: forms.New(nil),
+	})
+
+}
+func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		app.ClientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := forms.New(r.PostForm)
+
+	form.MatchesPattern("email", forms.EmailRX)
+	id, err := app.user.Authenticate(form.Get("email"), form.Get("password"))
+	fmt.Println(id, err)
+	if err == models.ErrInvalidCredentials {
+		form.Errors.Add("generic", "Email or password is incorrect")
+		app.render(w, r, "login.page.tmpl", &templateData{Form: form})
+		return
+	} else if err != nil {
+		app.ServerError(w, err)
+		return
+	}
+	app.Session.Put(r, "userID", id)
+	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
+	// create some session id and add to request
+	// navigate to snippet forms
+}
+func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
+	app.Session.Remove(r, "userID")
+	app.Session.Put(r, "flash", "You've been logged out successfully!")
+	http.Redirect(w, r, "/", 303)
+}
