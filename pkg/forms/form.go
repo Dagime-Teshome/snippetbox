@@ -3,6 +3,7 @@ package forms
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
@@ -11,6 +12,10 @@ type Form struct {
 	url.Values
 	Errors errors
 }
+
+var EmailRX = regexp.MustCompile(
+	`^[a-zA-Z0-9.!#$%&'*+/=?^_` + "`" + `{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*$`,
+)
 
 func New(data url.Values) *Form {
 	return &Form{
@@ -36,7 +41,22 @@ func (f *Form) MaxLength(field string, limit int) {
 		f.Errors.Add(field, fmt.Sprintf("%s cant be more than %d", field, limit))
 	}
 }
+func (f *Form) MinLength(field string, limit int) {
+	value := f.Get(field)
+	if utf8.RuneCountInString(value) < limit {
+		f.Errors.Add(field, fmt.Sprintf("%s password must have a min length of %v", field, limit))
+	}
+}
 
+func (f *Form) MatchesPattern(field string, pattern *regexp.Regexp) {
+	value := f.Get(field)
+	if value == "" {
+		return
+	}
+	if !pattern.MatchString(value) {
+		f.Errors.Add(field, "This field is invalid")
+	}
+}
 func (f *Form) PermittedValues(field string, opts ...string) {
 	value := f.Get(field)
 	if value == "" {
