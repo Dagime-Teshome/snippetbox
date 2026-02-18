@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	snippets "github.com/Dagime-Teshome/snippetbox/pkg/models/mysql"
+	models "github.com/Dagime-Teshome/snippetbox/pkg/models/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golangcollege/sessions"
 )
@@ -18,7 +18,8 @@ import (
 type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
-	snippet       *snippets.SnippetModel
+	snippet       *models.SnippetModel
+	user          *models.UserModel
 	templateCache map[string]*template.Template
 	Session       *sessions.Session
 }
@@ -48,7 +49,8 @@ func main() {
 
 		errorLog:      errorLog,
 		infoLog:       infoLog,
-		snippet:       &snippets.SnippetModel{Db: db},
+		user:          &models.UserModel{Db: db},
+		snippet:       &models.SnippetModel{Db: db},
 		templateCache: templateCache,
 		Session:       session,
 	}
