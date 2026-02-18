@@ -1,4 +1,4 @@
-package snippets
+package mysql
 
 import (
 	"database/sql"
