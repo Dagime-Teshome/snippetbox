@@ -84,6 +84,11 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) *templ
 	}
 	td.CurrentYear = time.Now().Year()
 	td.Flash = app.Session.PopString(r, "flash")
+	td.UserID = app.authenticatedUser(r)
 
 	return td
+}
+
+func (app *application) authenticatedUser(r *http.Request) int {
+	return app.Session.GetInt(r, "userID")
 }
