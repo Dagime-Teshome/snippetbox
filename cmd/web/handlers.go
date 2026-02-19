@@ -144,7 +144,6 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 
 	form.MatchesPattern("email", forms.EmailRX)
 	id, err := app.user.Authenticate(form.Get("email"), form.Get("password"))
-	fmt.Println(id, err)
 	if err == models.ErrInvalidCredentials {
 		form.Errors.Add("generic", "Email or password is incorrect")
 		app.render(w, r, "login.page.tmpl", &templateData{Form: form})
