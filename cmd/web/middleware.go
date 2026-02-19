@@ -36,3 +36,15 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 	}
 	return http.HandlerFunc(handler)
 }
+
+func (app *application) isLoggedIn(next http.Handler) http.Handler {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		id := app.authenticatedUser(r)
+		if id == 0 {
+			http.Redirect(w, r, "/user/login", 302)
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(handler)
+}
