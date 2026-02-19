@@ -9,6 +9,7 @@ import (
 )
 
 type templateData struct {
+	UserID      int
 	CurrentYear int
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet
