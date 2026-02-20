@@ -43,6 +43,7 @@ func main() {
 	}
 	session := sessions.New([]byte(*secret))
 	session.Lifetime = time.Minute * 30
+	session.SameSite = http.SameSiteStrictMode
 	session.Secure = true
 
 	app := application{
