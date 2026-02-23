@@ -28,9 +28,9 @@
         <input type='radio' name='expires' value='1' {{if (eq $exp "1")}}checked{{end}}> One day </input>
     </div>
     <div>
-        <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
         <input type='submit' value='Publish snippet'>
     </div>
 {{end}}
+        <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
 </form>
 {{end}}

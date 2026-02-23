@@ -15,9 +15,9 @@
         <input type='password' name='password'>
         </div>
         <div>
-        <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
         <input type='submit' value='Login'>
     </div>
     {{end}}
+        <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
     </form>
 {{end}}
