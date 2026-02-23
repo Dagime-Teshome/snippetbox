@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/Dagime-Teshome/snippetbox/pkg/models"
 	"github.com/justinas/nosurf"
 )
 
@@ -87,11 +88,15 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) *templ
 	td.CSRFToken = nosurf.Token(r)
 	td.CurrentYear = time.Now().Year()
 	td.Flash = app.Session.PopString(r, "flash")
-	td.UserID = app.authenticatedUser(r)
+	td.User = app.authenticatedUser(r)
 
 	return td
 }
 
-func (app *application) authenticatedUser(r *http.Request) int {
-	return app.Session.GetInt(r, "userID")
+func (app *application) authenticatedUser(r *http.Request) *models.User {
+	user, ok := r.Context().Value(contextKeyUser).(*models.User)
+	if !ok {
+		return nil
+	}
+	return user
 }
