@@ -9,7 +9,7 @@ import (
 )
 
 type templateData struct {
-	UserID      int
+	User        *models.User
 	CurrentYear int
 	CSRFToken   string
 	Snippet     *models.Snippet
