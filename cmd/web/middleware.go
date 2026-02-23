@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
+	"github.com/Dagime-Teshome/snippetbox/pkg/models"
 	"github.com/justinas/nosurf"
 )
 
@@ -41,8 +43,8 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 
 func (app *application) isLoggedIn(next http.Handler) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		id := app.authenticatedUser(r)
-		if id == 0 {
+		user := app.authenticatedUser(r)
+		if user == nil {
 			http.Redirect(w, r, "/user/login", 302)
 			return
 		}
@@ -60,4 +62,28 @@ func noSurf(next http.Handler) http.Handler {
 	})
 
 	return csrfHandler
+}
+
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		exists := app.Session.Exists(r, "userID")
+		if !exists {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		user, err := app.user.Get(app.Session.GetInt(r, "userID"))
+		if err == models.ErrNoRecord {
+			app.Session.Remove(r, "userID")
+			next.ServeHTTP(w, r)
+			return
+		} else if err != nil {
+			app.ServerError(w, err)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), contextKeyUser, user)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
