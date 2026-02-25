@@ -25,6 +25,7 @@ func (app *application) routes() http.Handler {
 	mux.Post("/user/logout", app.Session.Enable(app.authenticate(app.isLoggedIn(noSurf(http.HandlerFunc(app.logoutUser))))))
 	// show snippet
 	mux.Get("/snippet/:id", app.Session.Enable(app.authenticate(app.isLoggedIn(noSurf(http.HandlerFunc(app.showSnippet))))))
+	mux.Get("/ping", http.HandlerFunc(ping))
 
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	mux.Get("/static/", http.StripPrefix("/static", fileServer))
