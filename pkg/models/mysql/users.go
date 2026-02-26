@@ -9,13 +9,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-//	type User struct {
-//		Id             int
-//		Name           string
-//		Email          string
-//		HashedPassword []byte
-//		Created        time.Time
-//	}
 type UserModel struct {
 	Db *sql.DB
 }
@@ -60,7 +53,7 @@ func (m *UserModel) Authenticate(email, password string) (int, error) {
 func (m *UserModel) Get(id int) (*models.User, error) {
 	usr := &models.User{}
 	query := `SELECT id,name,email,created FROM users WHERE id = ?`
-	err := m.Db.QueryRow(query, id).Scan(&usr.Id, &usr.Name, &usr.Email, &usr.Created)
+	err := m.Db.QueryRow(query, id).Scan(&usr.ID, &usr.Name, &usr.Email, &usr.Created)
 	if err == sql.ErrNoRows {
 		return nil, models.ErrNoRecord
 	} else if err != nil {
