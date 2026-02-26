@@ -20,7 +20,7 @@ type Snippet struct {
 }
 
 type User struct {
-	Id             int
+	ID             int
 	Name           string
 	Email          string
 	HashedPassword []byte
