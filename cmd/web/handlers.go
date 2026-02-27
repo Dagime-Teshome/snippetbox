@@ -51,15 +51,8 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get(":id"))
-	if err != nil {
-		if r.URL.Query().Get("id") == "" {
-			id = 0
-		}
-		app.ClientError(w, 505)
-		return
-	}
-	if id <= 0 {
-		app.ServerError(w, fmt.Errorf("id cant be less than 0"))
+	if err != nil || id < 1 {
+		app.NotFound(w)
 		return
 	}
 
@@ -164,5 +157,5 @@ func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func ping(w http.ResponseWriter, r *http.Request) {
-w.Write([]byte("OK"))
+	w.Write([]byte("OK"))
 }
