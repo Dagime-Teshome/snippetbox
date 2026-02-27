@@ -10,7 +10,8 @@ import (
 	"os"
 	"time"
 
-	models "github.com/Dagime-Teshome/snippetbox/pkg/models/mysql"
+	"github.com/Dagime-Teshome/snippetbox/pkg/models"
+	"github.com/Dagime-Teshome/snippetbox/pkg/models/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golangcollege/sessions"
 )
@@ -20,10 +21,18 @@ type contextKey string
 var contextKeyUser = contextKey("user")
 
 type application struct {
-	errorLog      *log.Logger
-	infoLog       *log.Logger
-	snippet       *models.SnippetModel
-	user          *models.UserModel
+	errorLog *log.Logger
+	infoLog  *log.Logger
+	snippet  interface {
+		Insert(string, string, string) (int, error)
+		GetById(int) (*models.Snippet, error)
+		Latest() ([]*models.Snippet, error)
+	}
+	user interface {
+		Insert(string, string, string) error
+		Authenticate(string, string) (int, error)
+		Get(int) (*models.User, error)
+	}
 	templateCache map[string]*template.Template
 	Session       *sessions.Session
 }
@@ -54,8 +63,8 @@ func main() {
 
 		errorLog:      errorLog,
 		infoLog:       infoLog,
-		user:          &models.UserModel{Db: db},
-		snippet:       &models.SnippetModel{Db: db},
+		user:          &mysql.UserModel{Db: db},
+		snippet:       &mysql.SnippetModel{Db: db},
 		templateCache: templateCache,
 		Session:       session,
 	}
