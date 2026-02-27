@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"net/http"
 	"runtime/debug"
 	"time"
@@ -27,39 +26,7 @@ func (app *application) ClientError(w http.ResponseWriter, status int) {
 }
 
 func (app *application) NotFound(w http.ResponseWriter) {
-	template, err := returnTemplate("")
-	if err != nil {
-		app.ServerError(w, err)
-		return
-	}
-	if err := template.Execute(w, nil); err != nil {
-		app.ServerError(w, err)
-		return
-	}
-	// app.ClientError(w, http.StatusNotFound)
-}
-
-func returnTemplate(page string) (*template.Template, error) {
-	templatePath := ""
-	switch page {
-	case "home":
-		templatePath = "./ui/html/home.page.tmpl"
-	case "snippet":
-		templatePath = "./ui/html/show.page.tmpl"
-	default:
-		templatePath = "./ui/html/404.page.tmpl"
-	}
-
-	files := []string{
-		templatePath,
-		"./ui/html/base.layout.tmpl",
-		"./ui/html/footer.partial.tmpl",
-	}
-	tm, err := template.ParseFiles(files...)
-	if err != nil {
-		return nil, err
-	}
-	return tm, nil
+	app.ClientError(w, http.StatusNotFound)
 }
 
 func (app *application) render(w http.ResponseWriter, r *http.Request, name string, td *templateData) {
