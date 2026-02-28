@@ -60,6 +60,10 @@ func noSurf(next http.Handler) http.Handler {
 		Path:     "/",
 		Secure:   true,
 	})
+	// csrfHandler.SetFailureHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 	fmt.Fprintf(os.Stderr, "CSRF failure - reason: %v\n", nosurf.Reason(r))
+	// 	http.Error(w, http.StatusText(400), 400)
+	// }))
 
 	return csrfHandler
 }
