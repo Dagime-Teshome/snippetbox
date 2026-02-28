@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"net/http"
+	"net/url"
 	"testing"
 )
 
@@ -18,6 +19,59 @@ func TestPing(t *testing.T) {
 	}
 	if string(body) != "OK" {
 		t.Errorf("want body to equal %q", "OK")
+	}
+
+}
+
+func TestSignUpUser(t *testing.T) {
+
+	app := newTestApplication(t)
+	testServer := newTestServer(t, app.routes())
+	defer testServer.Close()
+
+	tests := []struct {
+		name            string
+		userName        string
+		userEmail       string
+		userPassword    string
+		useInvalidToken bool
+		wantCode        int
+		wantBody        []byte
+	}{
+		{"Empty name", "", "bob@example.com", "validPa$$word", false, http.StatusOK, []byte("This field cannot be blank")},
+		{"Empty email", "Bob", "", "validPa$$word", false, http.StatusOK, []byte("This field cannot be blank")},
+		{"Empty password", "Bob", "bob@example.com", "", false, http.StatusOK, []byte("This field cannot be blank")},
+		{"Invalid email (incomplete domain)", "Bob", "bob@example.", "validPa$$word", false, http.StatusOK, []byte("Enter a valid email address")},
+		{"Invalid email (missing @)", "Bob", "bobexample.com", "validPa$$word", false, http.StatusOK, []byte("Enter a valid email address")},
+		{"Invalid email (missing local part)", "Bob", "@example.com", "validPa$$word", false, http.StatusOK, []byte("Enter a valid email address")},
+		{"Short password", "Bob", "bob@example.com", "pa$$word", false, http.StatusOK, []byte("Password is too short")},
+		{"Duplicate email", "Bob", "dupe@example.com", "validPa$$word", false, http.StatusOK, []byte("Email address is already in use")},
+		{"Invalid CSRF Token", "", "", "", true, http.StatusBadRequest, []byte("Bad Request")},
+		{"Valid submission", "Bob", "bob@example.com", "validPa$$word", false, http.StatusSeeOther, []byte("")},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, body := testServer.get(t, "/user/signup")
+			csrfToken := extractCSRFToken(t, body)
+			if tt.useInvalidToken {
+				csrfToken = "wrongToken"
+			}
+			form := url.Values{}
+			form.Add("name", tt.userName)
+			form.Add("email", tt.userEmail)
+			form.Add("password", tt.userPassword)
+			form.Add("csrf_token", csrfToken)
+
+			code, _, body := testServer.postForm(t, "/user/signup", form)
+			if code != tt.wantCode {
+				t.Errorf("want %d; got %d", tt.wantCode, code)
+			}
+
+			if !bytes.Contains(body, tt.wantBody) {
+				t.Errorf("want body %q to contain %q", body, tt.wantBody)
+			}
+		})
 	}
 
 }
