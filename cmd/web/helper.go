@@ -43,8 +43,6 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 		app.ServerError(w, err)
 		return
 	}
-
-	// Execute the template set, passing in the dynamic data.
 	buf.WriteTo(w)
 }
 
