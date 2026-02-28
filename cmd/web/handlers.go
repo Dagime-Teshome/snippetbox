@@ -97,10 +97,9 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
 		app.ClientError(w, http.StatusBadRequest)
 		return
 	}
-
 	form := forms.New(r.PostForm)
 	form.Required("name", "email", "password")
-	form.MinLength("password", 5)
+	form.MinLength("password", 10)
 	form.MatchesPattern("email", forms.EmailRX)
 	if !form.Valid() {
 		app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
@@ -110,7 +109,7 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
 
 	err := app.user.Insert(name, email, password)
 	if err == models.ErrDuplicateEmail {
-		form.Errors.Add("email", "Address is already in use")
+		form.Errors.Add("email", "Email address is already in use")
 		app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
 		return
 	} else if err != nil {
@@ -118,7 +117,6 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.Session.Put(r, "flash", "Your signup was successful. Please log in.")
-	// And redirect the user to the login page.
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
 func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
