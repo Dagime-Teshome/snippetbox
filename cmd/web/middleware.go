@@ -60,16 +60,11 @@ func noSurf(next http.Handler) http.Handler {
 		Path:     "/",
 		Secure:   true,
 	})
-	// csrfHandler.SetFailureHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 	fmt.Fprintf(os.Stderr, "CSRF failure - reason: %v\n", nosurf.Reason(r))
-	// 	http.Error(w, http.StatusText(400), 400)
-	// }))
-
 	return csrfHandler
 }
 
 func (app *application) authenticate(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
 
 		exists := app.Session.Exists(r, "userID")
 		if !exists {
@@ -89,5 +84,6 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		ctx := context.WithValue(r.Context(), contextKeyUser, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+	}
+	return http.HandlerFunc(handler)
 }
